@@ -160,7 +160,7 @@ export function Vitrine() {
           <p>Seja o primeiro a cadastrar seu serviço ou produto para os vizinhos!</p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1.25rem' }}>
           {filteredEmpreendedores.map(emp => (
             <div key={emp.id} className="card" style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>

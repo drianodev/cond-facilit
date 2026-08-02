@@ -1,61 +1,67 @@
-import { Outlet, Link, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { LogOut, Home, Bell, Users, Calendar, FileText, Cake, Shield } from 'lucide-react';
+import { LogOut, Home, Bell, Users, Calendar, FileText, Cake, Shield, Menu, X } from 'lucide-react';
 import './MainLayout.css';
 
 export function MainLayout() {
   const { user, logout, isAdmin, canToggleRole, toggleRole } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
+    setMobileMenuOpen(false);
     await logout();
     navigate('/login');
   };
 
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false);
+  };
+
+  const navItems = [
+    { path: '/', label: 'Início', icon: Home },
+    { path: '/avisos', label: 'Avisos', icon: Bell },
+    { path: '/vitrine', label: 'Vitrine', icon: Users },
+    { path: '/deck', label: 'Deck', icon: Calendar },
+    { path: '/prestacoes', label: 'Prestações', icon: FileText },
+    { path: '/aniversariantes', label: 'Aniversariantes', icon: Cake },
+  ];
+
   return (
     <div className="layout-container">
-      <nav className="sidebar">
+      {/* Mobile Backdrop Overlay */}
+      {mobileMenuOpen && (
+        <div className="mobile-backdrop" onClick={closeMobileMenu} />
+      )}
+
+      {/* Sidebar / Mobile Drawer */}
+      <nav className={`sidebar ${mobileMenuOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
           <h2>CondFacilit</h2>
+          <button className="mobile-close-btn" onClick={closeMobileMenu}>
+            <X size={24} />
+          </button>
         </div>
         
         <ul className="nav-menu">
-          <li>
-            <Link to="/" className="nav-link">
-              <Home size={20} />
-              <span>Início</span>
-            </Link>
-          </li>
-          <li>
-            <Link to="/avisos" className="nav-link">
-              <Bell size={20} />
-              <span>Avisos</span>
-            </Link>
-          </li>
-          <li>
-            <Link to="/vitrine" className="nav-link">
-              <Users size={20} />
-              <span>Vitrine</span>
-            </Link>
-          </li>
-          <li>
-            <Link to="/deck" className="nav-link">
-              <Calendar size={20} />
-              <span>Deck</span>
-            </Link>
-          </li>
-          <li>
-            <Link to="/prestacoes" className="nav-link">
-              <FileText size={20} />
-              <span>Prestações</span>
-            </Link>
-          </li>
-          <li>
-            <Link to="/aniversariantes" className="nav-link">
-              <Cake size={20} />
-              <span>Aniversariantes</span>
-            </Link>
-          </li>
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = location.pathname === item.path;
+            return (
+              <li key={item.path}>
+                <Link 
+                  to={item.path} 
+                  className={`nav-link ${isActive ? 'active' : ''}`}
+                  onClick={closeMobileMenu}
+                >
+                  <Icon size={20} />
+                  <span>{item.label}</span>
+                </Link>
+              </li>
+            );
+          })}
         </ul>
 
         <div className="sidebar-footer">
@@ -64,7 +70,9 @@ export function MainLayout() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <img src={user.photoURL || 'https://via.placeholder.com/40'} alt="Perfil" className="user-avatar" />
                 <div className="user-details" style={{ flex: 1, overflow: 'hidden' }}>
-                  <span className="user-name" style={{ fontSize: '0.875rem', fontWeight: 'bold', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', display: 'block' }}>{user.displayName}</span>
+                  <span className="user-name" style={{ fontSize: '0.875rem', fontWeight: 'bold', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', display: 'block' }}>
+                    {user.displayName}
+                  </span>
                   
                   {canToggleRole ? (
                     <button 
@@ -115,11 +123,20 @@ export function MainLayout() {
         </div>
       </nav>
 
+      {/* Main Content Area */}
       <main className="main-content">
         <header className="mobile-header">
-          <h2>CondFacilit</h2>
-          {/* Mobile menu toggle would go here */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <button className="mobile-menu-btn" onClick={() => setMobileMenuOpen(true)}>
+              <Menu size={24} />
+            </button>
+            <h2>CondFacilit</h2>
+          </div>
+          {user && (
+            <img src={user.photoURL || 'https://via.placeholder.com/32'} alt="Perfil" className="user-avatar-small" />
+          )}
         </header>
+
         <div className="content-area">
           <Outlet />
         </div>
