@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import type { User } from 'firebase/auth';
-import { signInWithPopup, signInWithRedirect, getRedirectResult, signOut } from 'firebase/auth';
+import { signInWithPopup, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, googleProvider, db } from '../services/firebase';
 
@@ -33,10 +33,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getRedirectResult(auth).catch((err) => {
-      console.warn("Resultado do redirecionamento auth:", err);
-    });
-
     const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
@@ -85,25 +81,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsAdmin(prev => !prev);
   };
 
-  const signInWithGoogle = async () => {
-    try {
-      await signInWithPopup(auth, googleProvider);
-    } catch (error: any) {
-      console.warn("Popup error/blocked, tentando login via redirecionamento:", error);
-      if (
-        error?.code === 'auth/popup-blocked' ||
-        error?.code === 'auth/popup-closed-by-user' ||
-        error?.code === 'auth/cancelled-popup-request'
-      ) {
-        try {
-          await signInWithRedirect(auth, googleProvider);
-        } catch (redirectErr) {
-          console.error("Erro no redirecionamento do Google", redirectErr);
-        }
-      } else {
+  const signInWithGoogle = () => {
+    return signInWithPopup(auth, googleProvider).catch((error: any) => {
+      if (error?.code !== 'auth/popup-closed-by-user' && error?.code !== 'auth/cancelled-popup-request') {
         console.error("Erro ao fazer login com Google", error);
       }
-    }
+    });
   };
 
   const logout = async () => {
