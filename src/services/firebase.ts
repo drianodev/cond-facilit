@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
@@ -14,11 +14,13 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Initialize Auth
+// Initialize Auth with explicit LocalStorage persistence for Safari & Firefox compatibility
 export const auth = getAuth(app);
-export const googleProvider = new GoogleAuthProvider();
+setPersistence(auth, browserLocalPersistence).catch((err) => {
+  console.warn("Local persistence setting fallback:", err);
+});
 
-// Custom OAuth Provider settings
+export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({
   prompt: 'select_account'
 });

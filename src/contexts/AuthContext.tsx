@@ -83,7 +83,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithGoogle = () => {
     return signInWithPopup(auth, googleProvider).catch((error: any) => {
-      if (error?.code !== 'auth/popup-closed-by-user' && error?.code !== 'auth/cancelled-popup-request') {
+      if (error?.code === 'auth/popup-blocked') {
+        alert("O seu navegador bloqueou a janela de login do Google. Por favor, permita pop-ups para este site nas configurações e tente novamente.");
+      } else if (error?.code !== 'auth/popup-closed-by-user' && error?.code !== 'auth/cancelled-popup-request') {
         console.error("Erro ao fazer login com Google", error);
       }
     });
