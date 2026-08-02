@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp } from 'firebase/firestore';
 import { db } from '../services/firebase';
@@ -44,7 +44,7 @@ export function Deck() {
     return () => unsubscribe();
   }, []);
 
-  const diasBloqueados = reservas.map(r => r.dataReserva);
+
 
   const handleAgendar = async (e: React.FormEvent) => {
     e.preventDefault();
