@@ -19,7 +19,7 @@ interface AuthContextData {
   loading: boolean;
   isAdmin: boolean;
   canToggleRole: boolean;
-  signInWithGoogle: () => Promise<void>;
+  signInWithGoogle: () => Promise<any> | void;
   logout: () => Promise<void>;
   toggleRole: () => void;
 }
@@ -79,16 +79,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsAdmin(prev => !prev);
   };
 
-  const signInWithGoogle = async () => {
-    try {
-      await signInWithPopup(auth, googleProvider);
-    } catch (error: any) {
-      if (error.code === 'auth/popup-blocked') {
-        alert("O seu navegador bloqueou a janela de login do Google. Por favor, permita pop-ups para este site e tente novamente.");
-      } else if (error.code !== 'auth/popup-closed-by-user') {
+  const signInWithGoogle = () => {
+    return signInWithPopup(auth, googleProvider).catch((error: any) => {
+      if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
         console.error("Erro ao fazer login com Google", error);
       }
-    }
+    });
   };
 
   const logout = async () => {
