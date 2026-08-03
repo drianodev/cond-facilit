@@ -24,6 +24,29 @@ interface Empreendedor {
   createdAt: any;
 }
 
+// Helpers for WhatsApp and Instagram URLs
+const formatWhatsappLink = (phone: string) => {
+  let clean = phone.replace(/\D/g, '');
+  if (clean.length === 10 || clean.length === 11) {
+    clean = '55' + clean;
+  }
+  return `https://wa.me/${clean}`;
+};
+
+const formatInstagramUrl = (raw?: string) => {
+  if (!raw) return '';
+  const trimmed = raw.trim();
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    return trimmed;
+  }
+  const cleanHandle = trimmed
+    .replace(/^@/, '')
+    .replace(/^instagram\.com\//, '')
+    .replace(/^www\.instagram\.com\//, '')
+    .replace(/\/$/, '');
+  return `https://instagram.com/${cleanHandle}`;
+};
+
 export function Vitrine() {
   const { user, isAdmin } = useAuth();
   const [empreendedores, setEmpreendedores] = useState<Empreendedor[]>([]);
@@ -64,16 +87,13 @@ export function Vitrine() {
       return;
     }
 
-    // Clean whatsapp number
-    const cleanWhatsapp = whatsapp.replace(/\D/g, '');
-
     setSubmitting(true);
     try {
       await addDoc(collection(db, 'vitrine'), {
         nome: nome.trim(),
         categoria,
         descricao: descricao.trim(),
-        whatsapp: cleanWhatsapp,
+        whatsapp: whatsapp.trim(),
         instagram: instagram.trim(),
         apartamento: apartamento.trim(),
         ownerUid: user?.uid || '',
@@ -161,66 +181,71 @@ export function Vitrine() {
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1.25rem' }}>
-          {filteredEmpreendedores.map(emp => (
-            <div key={emp.id} className="card" style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
-                <span style={{ 
-                  display: 'inline-block', 
-                  padding: '0.25rem 0.75rem', 
-                  backgroundColor: 'var(--color-primary-light)', 
-                  color: 'white', 
-                  borderRadius: 'var(--radius-full)', 
-                  fontSize: '0.75rem', 
-                  fontWeight: 'bold',
-                }}>
-                  {emp.categoria}
-                </span>
+          {filteredEmpreendedores.map(emp => {
+            const waUrl = formatWhatsappLink(emp.whatsapp);
+            const igUrl = formatInstagramUrl(emp.instagram);
 
-                {(isAdmin || user?.uid === emp.ownerUid) && (
-                  <button 
-                    onClick={() => handleDelete(emp.id)}
-                    style={{ background: 'none', border: 'none', color: '#cf222e', cursor: 'pointer' }}
-                    title="Excluir negócio"
-                  >
-                    <Trash2 size={18} />
-                  </button>
+            return (
+              <div key={emp.id} className="card" style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+                  <span style={{ 
+                    display: 'inline-block', 
+                    padding: '0.25rem 0.75rem', 
+                    backgroundColor: 'var(--color-primary-light)', 
+                    color: 'white', 
+                    borderRadius: 'var(--radius-full)', 
+                    fontSize: '0.75rem', 
+                    fontWeight: 'bold',
+                  }}>
+                    {emp.categoria}
+                  </span>
+
+                  {(isAdmin || user?.uid === emp.ownerUid) && (
+                    <button 
+                      onClick={() => handleDelete(emp.id)}
+                      style={{ background: 'none', border: 'none', color: '#cf222e', cursor: 'pointer' }}
+                      title="Excluir negócio"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  )}
+                </div>
+
+                <h3 style={{ fontSize: '1.25rem', marginBottom: '0.25rem' }}>{emp.nome}</h3>
+                {emp.apartamento && (
+                  <small style={{ color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>Bloco/Apt: {emp.apartamento}</small>
                 )}
-              </div>
 
-              <h3 style={{ fontSize: '1.25rem', marginBottom: '0.25rem' }}>{emp.nome}</h3>
-              {emp.apartamento && (
-                <small style={{ color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>Bloco/Apt: {emp.apartamento}</small>
-              )}
-
-              <p style={{ color: 'var(--color-text-muted)', marginBottom: '1.5rem', flex: 1, whiteSpace: 'pre-line' }}>
-                {emp.descricao}
-              </p>
-              
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <a 
-                  href={`https://wa.me/${emp.whatsapp}`} 
-                  target="_blank" 
-                  rel="noreferrer" 
-                  className="btn" 
-                  style={{ backgroundColor: '#25D366', color: 'white', flex: 1, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-                >
-                  <MessageCircle size={18} /> WhatsApp
-                </a>
-                {emp.instagram && (
+                <p style={{ color: 'var(--color-text-muted)', marginBottom: '1.5rem', flex: 1, whiteSpace: 'pre-line' }}>
+                  {emp.descricao}
+                </p>
+                
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
                   <a 
-                    href={emp.instagram.startsWith('http') ? emp.instagram : `https://instagram.com/${emp.instagram.replace('@', '')}`} 
+                    href={waUrl} 
                     target="_blank" 
                     rel="noreferrer" 
                     className="btn" 
-                    style={{ backgroundColor: '#E1306C', color: 'white', padding: '0.75rem', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                    title="Ver Instagram"
+                    style={{ backgroundColor: '#25D366', color: 'white', flex: 1, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
                   >
-                    <InstagramIcon />
+                    <MessageCircle size={18} /> WhatsApp
                   </a>
-                )}
+                  {igUrl && (
+                    <a 
+                      href={igUrl} 
+                      target="_blank" 
+                      rel="noreferrer" 
+                      className="btn" 
+                      style={{ backgroundColor: '#E1306C', color: 'white', padding: '0.75rem', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      title="Ver Instagram"
+                    >
+                      <InstagramIcon />
+                    </a>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -277,7 +302,7 @@ export function Vitrine() {
                 <input 
                   type="tel" 
                   className="input-control" 
-                  placeholder="Ex: 11999999999"
+                  placeholder="Ex: 88999999999 ou (88) 99999-9999"
                   value={whatsapp}
                   onChange={(e) => setWhatsapp(e.target.value)}
                   required
@@ -289,7 +314,7 @@ export function Vitrine() {
                 <input 
                   type="text" 
                   className="input-control" 
-                  placeholder="Ex: @mariabolos ou https://..."
+                  placeholder="Ex: @agenciatymax ou https://instagram.com/agenciatymax"
                   value={instagram}
                   onChange={(e) => setInstagram(e.target.value)}
                 />
@@ -333,4 +358,3 @@ export function Vitrine() {
     </div>
   );
 }
-
